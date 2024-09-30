@@ -30,9 +30,14 @@ class _LightBulbControlState extends State<LightBulbControl> {
   @override
   void initState() {
     super.initState();
-    mqttService = MQTTService('10.0.2.2', 'flutter_client', 1883); // 10.0.2.2 is to connect to pc localhost from emulator
+    mqttService = MQTTService('10.0.2.2', 'flutter_client', 1883); // Usa l'indirizzo IP corretto
     mqttService.connect().then((_) {
       mqttService.subscribeToTopic('lamp/status');
+      mqttService.setOnMessageReceived((message) {
+        setState(() {
+          isLightOn = (message == 'on');
+        });
+      });
     });
   }
 

@@ -3,6 +3,7 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 
 class MQTTService {
   final MqttServerClient client;
+  Function(String)? onMessageReceived;
 
   MQTTService(String server, String clientId, int port)
       : client = MqttServerClient.withPort(server, clientId, port);
@@ -31,6 +32,7 @@ class MQTTService {
 
     if (client.connectionStatus!.state == MqttConnectionState.connected) {
       print('MQTT client connected');
+      client.updates!.listen(onMessage);
     } else {
       print('ERROR: MQTT client connection failed - disconnecting, state is ${client.connectionStatus!.state}');
       disconnect();
@@ -69,5 +71,19 @@ class MQTTService {
     final builder = MqttClientPayloadBuilder();
     builder.addString(message);
     client.publishMessage(topic, MqttQos.exactlyOnce, builder.payload!);
+  }
+
+  void onMessage(List<MqttReceivedMessage<MqttMessage>> event) {
+    final MqttPublishMessage recMess = event[0].payload as MqttPublishMessage;
+    final String message =
+        MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+
+    if (onMessageReceived != null) {
+      onMessageReceived!(message);
+    }
+  }
+
+  void setOnMessageReceived(Function(String) callback) {
+    onMessageReceived = callback;
   }
 }
