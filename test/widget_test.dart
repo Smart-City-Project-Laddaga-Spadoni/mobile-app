@@ -1,30 +1,36 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:mobile_app/main.dart';
+import 'package:mobile_app/comunication/mqtt_service.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mqtt_client/mqtt_client.dart'; // Importa il pacchetto mqtt_client
+import 'widget_test.mocks.dart'; // Importa il file di mock generato
 
+@GenerateMocks([MQTTService])
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('LightBulbControl Widget Tests', () {
+    late MockMQTTService mockMQTTService;
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    setUp(() {
+      mockMQTTService = MockMQTTService();
+      when(mockMQTTService.connect()).thenAnswer((_) async {
+        // Simula una connessione riuscita
+        when(mockMQTTService.client.connectionStatus!.state)
+            .thenReturn(MqttConnectionState.connected);
+      });
+      when(mockMQTTService.subscribeToTopic(any)).thenReturn(null);
+      when(mockMQTTService.setOnMessageReceived(any)).thenReturn(null);
+      when(mockMQTTService.publishMessage(any, any)).thenReturn(null);
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    testWidgets('Initial state is light off', (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: LightBulbControl(),
+      ));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      expect(find.text('Turn ON'), findsOneWidget);
+      expect(find.byType(Image), findsOneWidget);
+    });
   });
 }
