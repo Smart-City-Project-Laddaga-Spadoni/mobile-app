@@ -29,7 +29,7 @@ class _ConnectionStatusState extends State<ConnectionStatus> {
   @override
   void initState() {
     super.initState();
-    _startPingTimer();
+    startPingTimer();
   }
 
   @override
@@ -38,13 +38,13 @@ class _ConnectionStatusState extends State<ConnectionStatus> {
     super.dispose();
   }
 
-  void _startPingTimer() {
+  void startPingTimer() {
     _timer = Timer.periodic(Duration(seconds: 5), (timer) {
-      _checkServerConnection();
+      checkServerConnection();
     });
   }
 
-  Future<void> _checkServerConnection() async {
+  Future<void> checkServerConnection() async {
     String? serverUrl = await widget.storageService.read('server_url');
     if (serverUrl == null) {
       setState(() {

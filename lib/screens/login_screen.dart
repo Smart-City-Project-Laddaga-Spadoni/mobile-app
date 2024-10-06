@@ -18,6 +18,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final StorageService _storage = StorageService();
   final ApiService _apiService = ApiService();
 
+  @override
+  void initState() {
+    super.initState();
+    final connectionStatus = ConnectionStatus.of(context);
+    connectionStatus?.startPingTimer();
+  }
+
   Future<void> _login() async {
     print('Login button pressed');
     String? serverUrl = await _storage.read('server_url');

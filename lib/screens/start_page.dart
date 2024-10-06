@@ -36,11 +36,45 @@ class _StartPageState extends State<StartPage> {
     }
   }
 
+  bool _isValidUrl(String url) {
+    final Uri? uri = Uri.tryParse(url);
+    return uri != null && uri.hasScheme && uri.hasAuthority;
+  }
+
   Future<void> _saveServerUrl() async {
-    await _storage.write(key: 'server_url', value: _serverController.text);
+    final serverUrl = _serverController.text;
+    if (!_isValidUrl(serverUrl)) {
+      _showErrorDialog('Please enter a valid server URL.');
+      return;
+    }
+    await _storage.write(key: 'server_url', value: serverUrl);
+    // Controlla immediatamente la connessione
+    final connectionStatus = ConnectionStatus.of(context);
+    await connectionStatus?.checkServerConnection();
+    connectionStatus?.startPingTimer();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
