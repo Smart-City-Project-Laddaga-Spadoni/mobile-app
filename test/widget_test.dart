@@ -24,14 +24,14 @@ void main() {
       when(mockStorageService.read('server_url')).thenAnswer((_) async => 'http://localhost');
       when(mockStorageService.read('jwt')).thenAnswer((_) async => 'fake_jwt_token');
       when(mockApiService.fetchDeviceStatus(any, any, any)).thenAnswer((_) async {
-        return http.Response(json.encode({'status': {'is_on': false}}), 200);
+        return http.Response(json.encode({'status': {'is_on': false, 'brightness': 50}}), 200);
       });
-      when(mockApiService.toggleLight(any, any, any, any)).thenAnswer((_) async {
+      when(mockApiService.updateDeviceStatus(any, any, any, any, any)).thenAnswer((_) async {
         return http.Response('', 200);
       });
     });
 
-    testWidgets('Initial state is light off', (WidgetTester tester) async {
+    testWidgets('Initial state is light off with brightness 50', (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(
         home: LightBulbControl(
           apiService: mockApiService,
@@ -44,9 +44,10 @@ void main() {
       expect(find.text('Turn ON'), findsOneWidget);
       expect(find.byType(Image), findsOneWidget);
       expect(find.byType(DropdownButton<String>), findsOneWidget);
+      expect(find.byType(Slider), findsNothing); // Slider should not be visible when light is off
     });
 
-    testWidgets('Tapping button toggles light', (WidgetTester tester) async {
+    testWidgets('Tapping button toggles light and shows slider', (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(
         home: LightBulbControl(
           apiService: mockApiService,
@@ -64,6 +65,8 @@ void main() {
       await tester.pump();
 
       expect(find.text('Turn OFF'), findsOneWidget);
+      expect(find.byType(Slider), findsOneWidget); // Slider should be visible when light is on
     });
+
   });
 }

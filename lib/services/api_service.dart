@@ -31,14 +31,14 @@ class ApiService {
     );
   }
 
-  Future<http.Response> toggleLight(String serverUrl, String deviceId, bool isLightOn, String token) {
+  Future<http.Response> updateDeviceStatus(String serverUrl, String deviceId, bool isLightOn, int brightness, String token) {
     return http.post(
       Uri.parse('$serverUrl/device/$deviceId'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: json.encode({'status': {'is_on': isLightOn}}),
+      body: json.encode({'status': {'is_on': isLightOn, 'brightness': brightness}}),
     );
   }
 

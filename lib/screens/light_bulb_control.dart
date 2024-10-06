@@ -27,6 +27,7 @@ class LightBulbControl extends StatefulWidget {
 
 class _LightBulbControlState extends State<LightBulbControl> {
   bool isLightOn = false;
+  int brightness = 50; // Aggiungi il campo brightness
   late String deviceId;
 
   @override
@@ -52,9 +53,23 @@ class _LightBulbControlState extends State<LightBulbControl> {
         final data = json.decode(response.body);
         setState(() {
           isLightOn = data['status']['is_on'];
+          brightness = data['status']['brightness'] ?? 50; // Imposta brightness a 50 se è nullo
         });
       } else {
         _showErrorDialog('Failed to load device status: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      _showErrorDialog('Connection error: $e');
+    }
+  }
+
+  Future<void> _updateDeviceStatus() async {
+    String? serverUrl = await widget.storageService.read('server_url');
+    final token = await widget.storageService.read('jwt');
+    try {
+      final response = await widget.apiService.updateDeviceStatus(serverUrl!, deviceId, isLightOn, brightness, token!);
+      if (response.statusCode != 200) {
+        _showErrorDialog('Failed to update device status: ${response.reasonPhrase}');
       }
     } catch (e) {
       _showErrorDialog('Connection error: $e');
@@ -65,16 +80,14 @@ class _LightBulbControlState extends State<LightBulbControl> {
     setState(() {
       isLightOn = !isLightOn;
     });
-    String? serverUrl = await widget.storageService.read('server_url');
-    final token = await widget.storageService.read('jwt');
-    try {
-      final response = await widget.apiService.toggleLight(serverUrl!, deviceId, isLightOn, token!);
-      if (response.statusCode != 200) {
-        _showErrorDialog('Failed to update device status: ${response.reasonPhrase}');
-      }
-    } catch (e) {
-      _showErrorDialog('Connection error: $e');
-    }
+    await _updateDeviceStatus();
+  }
+
+  Future<void> _updateBrightness(double newBrightness) async {
+    setState(() {
+      brightness = newBrightness.toInt();
+    });
+    await _updateDeviceStatus();
   }
 
   void _showErrorDialog(String message) {
@@ -136,7 +149,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
               hint: Text('Select Device'),
               value: deviceId,
               onChanged: _onDeviceSelected,
-              items: widget.devices.map((String deviceId) { 
+              items: widget.devices.map((String deviceId) {
                 return DropdownMenuItem<String>(
                   value: deviceId,
                   child: Text(deviceId),
@@ -152,6 +165,18 @@ class _LightBulbControlState extends State<LightBulbControl> {
               onPressed: _toggleLight,
               child: Text(isLightOn ? 'Turn OFF' : 'Turn ON'),
             ),
+            SizedBox(height: 20),
+            if (isLightOn)
+              Slider(
+                value: brightness.toDouble(),
+                min: 1,
+                max: 100,
+                divisions: 99,
+                label: '$brightness',
+                onChanged: (double value) {
+                  _updateBrightness(value);
+                },
+              ),
           ],
         ),
       ),

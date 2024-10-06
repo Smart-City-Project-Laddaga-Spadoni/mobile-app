@@ -70,6 +70,34 @@ class MockApiService extends _i1.Mock implements _i3.ApiService {
       ) as _i4.Future<_i2.Response>);
 
   @override
+  _i4.Future<_i2.Response> signup(
+    String? serverUrl,
+    String? username,
+    String? password,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #signup,
+          [
+            serverUrl,
+            username,
+            password,
+          ],
+        ),
+        returnValue: _i4.Future<_i2.Response>.value(_FakeResponse_0(
+          this,
+          Invocation.method(
+            #signup,
+            [
+              serverUrl,
+              username,
+              password,
+            ],
+          ),
+        )),
+      ) as _i4.Future<_i2.Response>);
+
+  @override
   _i4.Future<_i2.Response> fetchDeviceStatus(
     String? serverUrl,
     String? deviceId,
@@ -98,30 +126,33 @@ class MockApiService extends _i1.Mock implements _i3.ApiService {
       ) as _i4.Future<_i2.Response>);
 
   @override
-  _i4.Future<_i2.Response> toggleLight(
+  _i4.Future<_i2.Response> updateDeviceStatus(
     String? serverUrl,
     String? deviceId,
     bool? isLightOn,
+    int? brightness,
     String? token,
   ) =>
       (super.noSuchMethod(
         Invocation.method(
-          #toggleLight,
+          #updateDeviceStatus,
           [
             serverUrl,
             deviceId,
             isLightOn,
+            brightness,
             token,
           ],
         ),
         returnValue: _i4.Future<_i2.Response>.value(_FakeResponse_0(
           this,
           Invocation.method(
-            #toggleLight,
+            #updateDeviceStatus,
             [
               serverUrl,
               deviceId,
               isLightOn,
+              brightness,
               token,
             ],
           ),
