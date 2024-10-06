@@ -168,10 +168,8 @@ class _LightBulbControlState extends State<LightBulbControl> {
 
   @override
   void dispose() {
-    if (socket != null) {
-      socket.disconnect();
-      socket.close();
-    }
+    socket.disconnect();
+    socket.close();
     super.dispose();
   }
 

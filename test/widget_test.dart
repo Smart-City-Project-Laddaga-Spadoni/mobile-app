@@ -32,41 +32,44 @@ void main() {
     });
 
     testWidgets('Initial state is light off with brightness 50', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: LightBulbControl(
-          apiService: mockApiService,
-          storageService: mockStorageService,
-          deviceId: 'device1',
-          devices: devices,
-        ),
-      ));
+      await tester.runAsync(() async {
+        await tester.pumpWidget(MaterialApp(
+          home: LightBulbControl(
+            apiService: mockApiService,
+            storageService: mockStorageService,
+            deviceId: 'device1',
+            devices: devices,
+          ),
+        ));
 
-      expect(find.text('Turn ON'), findsOneWidget);
-      expect(find.byType(Image), findsOneWidget);
-      expect(find.byType(DropdownButton<String>), findsOneWidget);
-      expect(find.byType(Slider), findsNothing); // Slider should not be visible when light is off
+        expect(find.text('Turn ON'), findsOneWidget);
+        expect(find.byType(Image), findsOneWidget);
+        expect(find.byType(DropdownButton<String>), findsOneWidget);
+        expect(find.byType(Slider), findsNothing); // Slider should not be visible when light is off
+      });
     });
 
     testWidgets('Tapping button toggles light and shows slider', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: LightBulbControl(
-          apiService: mockApiService,
-          storageService: mockStorageService,
-          deviceId: 'device1',
-          devices: devices,
-        ),
-      ));
+      await tester.runAsync(() async {
+        await tester.pumpWidget(MaterialApp(
+          home: LightBulbControl(
+            apiService: mockApiService,
+            storageService: mockStorageService,
+            deviceId: 'device1',
+            devices: devices,
+          ),
+        ));
 
-      expect(find.text('Turn ON'), findsOneWidget);
+        expect(find.text('Turn ON'), findsOneWidget);
 
-      // Ensure the button is visible before tapping
-      await tester.ensureVisible(find.text('Turn ON'));
-      await tester.tap(find.text('Turn ON'));
-      await tester.pump();
+        // Ensure the button is visible before tapping
+        await tester.ensureVisible(find.text('Turn ON'));
+        await tester.tap(find.text('Turn ON'));
+        await tester.pump();
 
-      expect(find.text('Turn OFF'), findsOneWidget);
-      expect(find.byType(Slider), findsOneWidget); // Slider should be visible when light is on
+        expect(find.text('Turn OFF'), findsOneWidget);
+        expect(find.byType(Slider), findsOneWidget); // Slider should be visible when light is on
+      });
     });
-
   });
 }
