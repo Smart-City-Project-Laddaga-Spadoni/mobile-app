@@ -36,7 +36,7 @@ jobs:
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
-        distribution: 'temurin'  # or 'zulu', check wich one is better
+        distribution: 'temurin'
         java-version: '17'
 
     - name: Install dependencies
@@ -45,8 +45,11 @@ jobs:
     - name: Build APK
       run: flutter build apk --release
 
+    - name: Rename APK
+      run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/SmartCityLS.apk
+
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: app-release.apk
-        path: build/app/outputs/flutter-apk/app-release.apk
+        name: SmartCityLS.apk
+        path: build/app/outputs/flutter-apk/SmartCityLS.apk
