@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
-import 'light_bulb_control.dart';
+import 'device_selection_screen.dart';
 import 'start_page.dart';
 import '../widgets/error_dialog.dart';
 import '../widgets/connection_status.dart';
@@ -42,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await _storage.write('jwt', data['access_token']);
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => LightBulbControl(apiService: _apiService, storageService: _storage)),
+          MaterialPageRoute(builder: (context) => DeviceSelectionScreen(apiService: _apiService, storageService: _storage)),
         );
       } else {
         _showErrorDialog('Login failed: ${response.reasonPhrase}');

@@ -31,10 +31,16 @@ class ApiService {
     );
   }
 
-  
   Future<http.Response> ping(String serverUrl) {
     return http.get(
       Uri.parse('$serverUrl/ping'),
+    );
+  }
+
+  Future<http.Response> getDevices(String serverUrl, String token) {
+    return http.get(
+      Uri.parse('$serverUrl/devices'),
+      headers: {'Authorization': 'Bearer $token'},
     );
   }
 }

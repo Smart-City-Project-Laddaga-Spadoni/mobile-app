@@ -2,40 +2,36 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
-import 'start_page.dart';
+import 'light_bulb_control.dart';
 import 'login_screen.dart';
+import 'start_page.dart';
 import '../widgets/error_dialog.dart';
 import '../widgets/connection_status.dart';
 
-class LightBulbControl extends StatefulWidget {
+class DeviceSelectionScreen extends StatefulWidget {
   final ApiService apiService;
   final StorageService storageService;
-  final String deviceId;
-  final List<String> devices; // Aggiungi la lista dei dispositivi
 
-  LightBulbControl({
+  DeviceSelectionScreen({
     required this.apiService,
     required this.storageService,
-    required this.deviceId,
-    required this.devices, // Aggiungi la lista dei dispositivi
   });
 
   @override
-  _LightBulbControlState createState() => _LightBulbControlState();
+  _DeviceSelectionScreenState createState() => _DeviceSelectionScreenState();
 }
 
-class _LightBulbControlState extends State<LightBulbControl> {
-  bool isLightOn = false;
-  late String deviceId;
+class _DeviceSelectionScreenState extends State<DeviceSelectionScreen> {
+  List<String> devices = [];
+  String? selectedDeviceId;
 
   @override
   void initState() {
     super.initState();
-    deviceId = widget.deviceId;
-    _fetchDeviceStatus();
+    _fetchDevices();
   }
 
-  Future<void> _fetchDeviceStatus() async {
+  Future<void> _fetchDevices() async {
     String? serverUrl = await widget.storageService.read('server_url');
     final token = await widget.storageService.read('jwt');
     if (token == null) {
@@ -46,30 +42,14 @@ class _LightBulbControlState extends State<LightBulbControl> {
       return;
     }
     try {
-      final response = await widget.apiService.fetchDeviceStatus(serverUrl!, deviceId, token);
+      final response = await widget.apiService.getDevices(serverUrl!, token);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          isLightOn = data['status']['is_on'];
+          devices = List<String>.from(data.map((device) => device['device_id']));
         });
       } else {
-        _showErrorDialog('Failed to load device status: ${response.reasonPhrase}');
-      }
-    } catch (e) {
-      _showErrorDialog('Connection error: $e');
-    }
-  }
-
-  Future<void> _toggleLight() async {
-    setState(() {
-      isLightOn = !isLightOn;
-    });
-    String? serverUrl = await widget.storageService.read('server_url');
-    final token = await widget.storageService.read('jwt');
-    try {
-      final response = await widget.apiService.toggleLight(serverUrl!, deviceId, isLightOn, token!);
-      if (response.statusCode != 200) {
-        _showErrorDialog('Failed to update device status: ${response.reasonPhrase}');
+        _showErrorDialog('Failed to load devices: ${response.reasonPhrase}');
       }
     } catch (e) {
       _showErrorDialog('Connection error: $e');
@@ -85,19 +65,21 @@ class _LightBulbControlState extends State<LightBulbControl> {
     );
   }
 
-  Future<void> _logout() async {
-    await widget.storageService.logout();
+  void _onDeviceSelected(String? deviceId) {
+    setState(() {
+      selectedDeviceId = deviceId;
+    });
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => StartPage()),
+      MaterialPageRoute(
+        builder: (context) => LightBulbControl(
+          apiService: widget.apiService,
+          storageService: widget.storageService,
+          deviceId: selectedDeviceId!,
+          devices: devices, // Passa la lista dei dispositivi
+        ),
+      ),
     );
-  }
-
-  void _onDeviceSelected(String? newDeviceId) {
-    setState(() {
-      deviceId = newDeviceId!;
-    });
-    _fetchDeviceStatus();
   }
 
   @override
@@ -106,16 +88,12 @@ class _LightBulbControlState extends State<LightBulbControl> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Light Bulb Control'),
+        title: Text('Select Device'),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-          IconButton(
-            icon: Icon(Icons.settings),
             onPressed: () async {
-              await widget.storageService.delete('server_url');
+              await widget.storageService.logout();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => StartPage()),
@@ -134,23 +112,14 @@ class _LightBulbControlState extends State<LightBulbControl> {
             ),
             DropdownButton<String>(
               hint: Text('Select Device'),
-              value: deviceId,
+              value: selectedDeviceId,
               onChanged: _onDeviceSelected,
-              items: widget.devices.map((String deviceId) { // Usa la lista dei dispositivi passata
+              items: devices.map((String deviceId) {
                 return DropdownMenuItem<String>(
                   value: deviceId,
                   child: Text(deviceId),
                 );
               }).toList(),
-            ),
-            Image.asset(
-              isLightOn ? 'assets/images/light-bulb-ON.jpg' : 'assets/images/light-bulb-OFF.jpg',
-              height: 200,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _toggleLight,
-              child: Text(isLightOn ? 'Turn OFF' : 'Turn ON'),
             ),
           ],
         ),

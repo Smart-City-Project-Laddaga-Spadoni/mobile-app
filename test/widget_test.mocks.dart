@@ -142,6 +142,31 @@ class MockApiService extends _i1.Mock implements _i3.ApiService {
           ),
         )),
       ) as _i4.Future<_i2.Response>);
+
+  @override
+  _i4.Future<_i2.Response> getDevices(
+    String? serverUrl,
+    String? token,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getDevices,
+          [
+            serverUrl,
+            token,
+          ],
+        ),
+        returnValue: _i4.Future<_i2.Response>.value(_FakeResponse_0(
+          this,
+          Invocation.method(
+            #getDevices,
+            [
+              serverUrl,
+              token,
+            ],
+          ),
+        )),
+      ) as _i4.Future<_i2.Response>);
 }
 
 /// A class which mocks [StorageService].
@@ -183,6 +208,16 @@ class MockStorageService extends _i1.Mock implements _i5.StorageService {
         Invocation.method(
           #delete,
           [key],
+        ),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> logout() => (super.noSuchMethod(
+        Invocation.method(
+          #logout,
+          [],
         ),
         returnValue: _i4.Future<void>.value(),
         returnValueForMissingStub: _i4.Future<void>.value(),

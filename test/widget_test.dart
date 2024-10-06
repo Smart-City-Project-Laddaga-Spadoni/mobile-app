@@ -14,10 +14,12 @@ void main() {
   group('LightBulbControl Widget Tests', () {
     late MockApiService mockApiService;
     late MockStorageService mockStorageService;
+    late List<String> devices;
 
     setUp(() {
       mockApiService = MockApiService();
       mockStorageService = MockStorageService();
+      devices = ['device1', 'device2', 'device3'];
 
       when(mockStorageService.read('server_url')).thenAnswer((_) async => 'http://localhost');
       when(mockStorageService.read('jwt')).thenAnswer((_) async => 'fake_jwt_token');
@@ -34,11 +36,14 @@ void main() {
         home: LightBulbControl(
           apiService: mockApiService,
           storageService: mockStorageService,
+          deviceId: 'device1',
+          devices: devices,
         ),
       ));
 
       expect(find.text('Turn ON'), findsOneWidget);
       expect(find.byType(Image), findsOneWidget);
+      expect(find.byType(DropdownButton<String>), findsOneWidget);
     });
 
     testWidgets('Tapping button toggles light', (WidgetTester tester) async {
@@ -46,6 +51,8 @@ void main() {
         home: LightBulbControl(
           apiService: mockApiService,
           storageService: mockStorageService,
+          deviceId: 'device1',
+          devices: devices,
         ),
       ));
 
