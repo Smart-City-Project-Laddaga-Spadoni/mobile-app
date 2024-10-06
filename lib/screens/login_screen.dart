@@ -3,7 +3,6 @@ import 'dart:convert';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'device_selection_screen.dart';
-import 'start_page.dart';
 import 'settings_page.dart';
 import '../widgets/error_dialog.dart';
 import '../widgets/connection_status.dart';
