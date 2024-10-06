@@ -13,6 +13,17 @@ class ApiService {
     );
   }
 
+  Future<http.Response> signup(String serverUrl, String username, String password) {
+    return http.post(
+      Uri.parse('$serverUrl/signup'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'username': username,
+        'password': password,
+      }),
+    );
+  }
+
   Future<http.Response> fetchDeviceStatus(String serverUrl, String deviceId, String token) {
     return http.get(
       Uri.parse('$serverUrl/device/$deviceId'),

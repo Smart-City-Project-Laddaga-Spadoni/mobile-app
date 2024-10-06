@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'start_page.dart';
 import 'login_screen.dart';
+import 'settings_page.dart';
 import '../widgets/error_dialog.dart';
 import '../widgets/connection_status.dart';
 
@@ -11,13 +12,13 @@ class LightBulbControl extends StatefulWidget {
   final ApiService apiService;
   final StorageService storageService;
   final String deviceId;
-  final List<String> devices; // Aggiungi la lista dei dispositivi
+  final List<String> devices;
 
   LightBulbControl({
     required this.apiService,
     required this.storageService,
     required this.deviceId,
-    required this.devices, // Aggiungi la lista dei dispositivi
+    required this.devices,
   });
 
   @override
@@ -114,11 +115,10 @@ class _LightBulbControlState extends State<LightBulbControl> {
           ),
           IconButton(
             icon: Icon(Icons.settings),
-            onPressed: () async {
-              await widget.storageService.delete('server_url');
-              Navigator.pushReplacement(
+            onPressed: () {
+              Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => StartPage()),
+                MaterialPageRoute(builder: (context) => SettingsPage(storageService: widget.storageService)),
               );
             },
           ),
@@ -136,7 +136,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
               hint: Text('Select Device'),
               value: deviceId,
               onChanged: _onDeviceSelected,
-              items: widget.devices.map((String deviceId) { // Usa la lista dei dispositivi passata
+              items: widget.devices.map((String deviceId) { 
                 return DropdownMenuItem<String>(
                   value: deviceId,
                   child: Text(deviceId),

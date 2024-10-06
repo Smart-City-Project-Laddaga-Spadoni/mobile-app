@@ -5,6 +5,7 @@ import '../services/storage_service.dart';
 import 'light_bulb_control.dart';
 import 'login_screen.dart';
 import 'start_page.dart';
+import 'settings_page.dart';
 import '../widgets/error_dialog.dart';
 import '../widgets/connection_status.dart';
 
@@ -76,7 +77,7 @@ class _DeviceSelectionScreenState extends State<DeviceSelectionScreen> {
           apiService: widget.apiService,
           storageService: widget.storageService,
           deviceId: selectedDeviceId!,
-          devices: devices, // Passa la lista dei dispositivi
+          devices: devices, 
         ),
       ),
     );
@@ -97,6 +98,15 @@ class _DeviceSelectionScreenState extends State<DeviceSelectionScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => StartPage()),
+              );
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsPage(storageService: widget.storageService)),
               );
             },
           ),

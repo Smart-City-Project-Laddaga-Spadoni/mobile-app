@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'device_selection_screen.dart';
 import 'start_page.dart';
+import 'settings_page.dart';
 import '../widgets/error_dialog.dart';
 import '../widgets/connection_status.dart';
 
@@ -52,11 +53,58 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _signup() async {
+    print('Signup button pressed');
+    String? serverUrl = await _storage.read('server_url');
+    if (serverUrl == null) {
+      _showErrorDialog('Server URL is not set');
+      return;
+    }
+    try {
+      final response = await _apiService.signup(serverUrl, _usernameController.text, _passwordController.text);
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        _showSuccessDialog('Registration successful. Please log in.');
+      } else {
+        final data = json.decode(response.body);
+        _showErrorDialog('Signup failed: ${data['message']}');
+      }
+    } catch (e) {
+      _showErrorDialog('Connection error: $e');
+    }
+  }
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return ErrorDialog(message: message);
+      },
+    );
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Success'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+            ),
+          ],
+        );
       },
     );
   }
@@ -71,11 +119,10 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.settings),
-            onPressed: () async {
-              await _storage.delete('server_url');
-              Navigator.pushReplacement(
+            onPressed: () {
+              Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => StartPage()),
+                MaterialPageRoute(builder: (context) => SettingsPage(storageService: _storage)),
               );
             },
           ),
@@ -99,9 +146,19 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _login,
-              child: Text('Login'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: _login,
+                  child: Text('Login'),
+                ),
+                Text('OR'),
+                ElevatedButton(
+                  onPressed: _signup,
+                  child: Text('Sign Up'),
+                ),
+              ],
             ),
           ],
         ),
