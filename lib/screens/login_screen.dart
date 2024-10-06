@@ -5,6 +5,7 @@ import '../services/storage_service.dart';
 import 'light_bulb_control.dart';
 import 'start_page.dart';
 import '../widgets/error_dialog.dart';
+import '../widgets/connection_status.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -55,6 +56,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final connectionStatus = ConnectionStatus.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Login'),
@@ -75,6 +78,10 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Text(
+              connectionStatus?.isConnected ?? false ? 'Connected to server' : 'Not connected to server',
+              style: TextStyle(color: connectionStatus?.isConnected ?? false ? Colors.green : Colors.red),
+            ),
             TextField(
               controller: _usernameController,
               decoration: InputDecoration(labelText: 'Username'),

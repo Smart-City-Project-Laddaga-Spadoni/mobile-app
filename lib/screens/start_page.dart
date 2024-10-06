@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'login_screen.dart';
+import '../widgets/connection_status.dart';
 
 class StartPage extends StatefulWidget {
   @override
@@ -37,6 +38,8 @@ class _StartPageState extends State<StartPage> {
 
   @override
   Widget build(BuildContext context) {
+    final connectionStatus = ConnectionStatus.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Enter Server Address'),
@@ -45,6 +48,10 @@ class _StartPageState extends State<StartPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Text(
+              connectionStatus?.isConnected ?? false ? 'Connected to server' : 'Not connected to server',
+              style: TextStyle(color: connectionStatus?.isConnected ?? false ? Colors.green : Colors.red),
+            ),
             TextField(
               controller: _serverController,
               decoration: InputDecoration(labelText: 'Server Address'),

@@ -10,7 +10,7 @@ class ErrorDialog extends StatelessWidget {
     return AlertDialog(
       title: Text('Error'),
       content: Text(message),
-      actions: [
+      actions: <Widget>[
         TextButton(
           child: Text('OK'),
           onPressed: () {

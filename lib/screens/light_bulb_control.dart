@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'start_page.dart';
 import '../widgets/error_dialog.dart';
+import '../widgets/connection_status.dart';
 
 class LightBulbControl extends StatefulWidget {
   final ApiService apiService;
@@ -73,6 +74,8 @@ class _LightBulbControlState extends State<LightBulbControl> {
 
   @override
   Widget build(BuildContext context) {
+    final connectionStatus = ConnectionStatus.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Light Bulb Control'),
@@ -93,6 +96,10 @@ class _LightBulbControlState extends State<LightBulbControl> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text(
+              connectionStatus?.isConnected ?? false ? 'Connected to server' : 'Not connected to server',
+              style: TextStyle(color: connectionStatus?.isConnected ?? false ? Colors.green : Colors.red),
+            ),
             Image.asset(
               isLightOn ? 'assets/images/light-bulb-ON.jpg' : 'assets/images/light-bulb-OFF.jpg',
               height: 200,
