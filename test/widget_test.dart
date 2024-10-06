@@ -1,36 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_app/main.dart';
-import 'package:mobile_app/comunication/mqtt_service.dart';
+import 'dart:convert';
+import 'package:mobile_app/screens/light_bulb_control.dart';
+import 'package:mobile_app/services/api_service.dart';
+import 'package:mobile_app/services/storage_service.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-import 'package:mqtt_client/mqtt_client.dart'; // Importa il pacchetto mqtt_client
-import 'widget_test.mocks.dart'; // Importa il file di mock generato
+import 'package:http/http.dart' as http;
+import 'widget_test.mocks.dart';
 
-@GenerateMocks([MQTTService])
+@GenerateMocks([ApiService, StorageService])
 void main() {
   group('LightBulbControl Widget Tests', () {
-    late MockMQTTService mockMQTTService;
+    late MockApiService mockApiService;
+    late MockStorageService mockStorageService;
 
     setUp(() {
-      mockMQTTService = MockMQTTService();
-      when(mockMQTTService.connect()).thenAnswer((_) async {
-        // Simula una connessione riuscita
-        when(mockMQTTService.client.connectionStatus!.state)
-            .thenReturn(MqttConnectionState.connected);
+      mockApiService = MockApiService();
+      mockStorageService = MockStorageService();
+
+      when(mockStorageService.read('server_url')).thenAnswer((_) async => 'http://localhost');
+      when(mockStorageService.read('jwt')).thenAnswer((_) async => 'fake_jwt_token');
+      when(mockApiService.fetchDeviceStatus(any, any, any)).thenAnswer((_) async {
+        return http.Response(json.encode({'status': {'is_on': false}}), 200);
       });
-      when(mockMQTTService.subscribeToTopic(any)).thenReturn(null);
-      when(mockMQTTService.setOnMessageReceived(any)).thenReturn(null);
-      when(mockMQTTService.publishMessage(any, any)).thenReturn(null);
+      when(mockApiService.toggleLight(any, any, any, any)).thenAnswer((_) async {
+        return http.Response('', 200);
+      });
     });
 
     testWidgets('Initial state is light off', (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(
-        home: LightBulbControl(),
+        home: LightBulbControl(
+          apiService: mockApiService,
+          storageService: mockStorageService,
+        ),
       ));
 
       expect(find.text('Turn ON'), findsOneWidget);
       expect(find.byType(Image), findsOneWidget);
+    });
+
+    testWidgets('Tapping button toggles light', (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: LightBulbControl(
+          apiService: mockApiService,
+          storageService: mockStorageService,
+        ),
+      ));
+
+      expect(find.text('Turn ON'), findsOneWidget);
+
+      // Ensure the button is visible before tapping
+      await tester.ensureVisible(find.text('Turn ON'));
+      await tester.tap(find.text('Turn ON'));
+      await tester.pump();
+
+      expect(find.text('Turn OFF'), findsOneWidget);
     });
   });
 }

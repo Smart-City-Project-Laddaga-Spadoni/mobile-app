@@ -5,10 +5,10 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
-import 'package:mobile_app/comunication/mqtt_service.dart' as _i3;
+import 'package:http/http.dart' as _i2;
+import 'package:mobile_app/services/api_service.dart' as _i3;
+import 'package:mobile_app/services/storage_service.dart' as _i5;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mqtt_client/mqtt_client.dart' as _i5;
-import 'package:mqtt_client/mqtt_server_client.dart' as _i2;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -23,9 +23,8 @@ import 'package:mqtt_client/mqtt_server_client.dart' as _i2;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-class _FakeMqttServerClient_0 extends _i1.SmartFake
-    implements _i2.MqttServerClient {
-  _FakeMqttServerClient_0(
+class _FakeResponse_0 extends _i1.SmartFake implements _i2.Response {
+  _FakeResponse_0(
     Object parent,
     Invocation parentInvocation,
   ) : super(
@@ -34,139 +33,143 @@ class _FakeMqttServerClient_0 extends _i1.SmartFake
         );
 }
 
-/// A class which mocks [MQTTService].
+/// A class which mocks [ApiService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockMQTTService extends _i1.Mock implements _i3.MQTTService {
-  MockMQTTService() {
+class MockApiService extends _i1.Mock implements _i3.ApiService {
+  MockApiService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i2.MqttServerClient get client => (super.noSuchMethod(
-        Invocation.getter(#client),
-        returnValue: _FakeMqttServerClient_0(
-          this,
-          Invocation.getter(#client),
-        ),
-      ) as _i2.MqttServerClient);
-
-  @override
-  set onMessageReceived(dynamic Function(String)? _onMessageReceived) =>
-      super.noSuchMethod(
-        Invocation.setter(
-          #onMessageReceived,
-          _onMessageReceived,
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  _i4.Future<void> connect() => (super.noSuchMethod(
+  _i4.Future<_i2.Response> login(
+    String? serverUrl,
+    String? username,
+    String? password,
+  ) =>
+      (super.noSuchMethod(
         Invocation.method(
-          #connect,
-          [],
+          #login,
+          [
+            serverUrl,
+            username,
+            password,
+          ],
+        ),
+        returnValue: _i4.Future<_i2.Response>.value(_FakeResponse_0(
+          this,
+          Invocation.method(
+            #login,
+            [
+              serverUrl,
+              username,
+              password,
+            ],
+          ),
+        )),
+      ) as _i4.Future<_i2.Response>);
+
+  @override
+  _i4.Future<_i2.Response> fetchDeviceStatus(
+    String? serverUrl,
+    String? deviceId,
+    String? token,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #fetchDeviceStatus,
+          [
+            serverUrl,
+            deviceId,
+            token,
+          ],
+        ),
+        returnValue: _i4.Future<_i2.Response>.value(_FakeResponse_0(
+          this,
+          Invocation.method(
+            #fetchDeviceStatus,
+            [
+              serverUrl,
+              deviceId,
+              token,
+            ],
+          ),
+        )),
+      ) as _i4.Future<_i2.Response>);
+
+  @override
+  _i4.Future<_i2.Response> toggleLight(
+    String? serverUrl,
+    String? deviceId,
+    bool? isLightOn,
+    String? token,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #toggleLight,
+          [
+            serverUrl,
+            deviceId,
+            isLightOn,
+            token,
+          ],
+        ),
+        returnValue: _i4.Future<_i2.Response>.value(_FakeResponse_0(
+          this,
+          Invocation.method(
+            #toggleLight,
+            [
+              serverUrl,
+              deviceId,
+              isLightOn,
+              token,
+            ],
+          ),
+        )),
+      ) as _i4.Future<_i2.Response>);
+}
+
+/// A class which mocks [StorageService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockStorageService extends _i1.Mock implements _i5.StorageService {
+  MockStorageService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i4.Future<void> write(
+    String? key,
+    String? value,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #write,
+          [
+            key,
+            value,
+          ],
         ),
         returnValue: _i4.Future<void>.value(),
         returnValueForMissingStub: _i4.Future<void>.value(),
       ) as _i4.Future<void>);
 
   @override
-  void disconnect() => super.noSuchMethod(
+  _i4.Future<String?> read(String? key) => (super.noSuchMethod(
         Invocation.method(
-          #disconnect,
-          [],
+          #read,
+          [key],
         ),
-        returnValueForMissingStub: null,
-      );
+        returnValue: _i4.Future<String?>.value(),
+      ) as _i4.Future<String?>);
 
   @override
-  void onDisconnected() => super.noSuchMethod(
+  _i4.Future<void> delete(String? key) => (super.noSuchMethod(
         Invocation.method(
-          #onDisconnected,
-          [],
+          #delete,
+          [key],
         ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void onConnected() => super.noSuchMethod(
-        Invocation.method(
-          #onConnected,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void onSubscribed(String? topic) => super.noSuchMethod(
-        Invocation.method(
-          #onSubscribed,
-          [topic],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void onSubscribeFail(String? topic) => super.noSuchMethod(
-        Invocation.method(
-          #onSubscribeFail,
-          [topic],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void pong() => super.noSuchMethod(
-        Invocation.method(
-          #pong,
-          [],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void subscribeToTopic(String? topic) => super.noSuchMethod(
-        Invocation.method(
-          #subscribeToTopic,
-          [topic],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void publishMessage(
-    String? topic,
-    String? message,
-  ) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #publishMessage,
-          [
-            topic,
-            message,
-          ],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void onMessage(List<_i5.MqttReceivedMessage<_i5.MqttMessage>>? event) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #onMessage,
-          [event],
-        ),
-        returnValueForMissingStub: null,
-      );
-
-  @override
-  void setOnMessageReceived(dynamic Function(String)? callback) =>
-      super.noSuchMethod(
-        Invocation.method(
-          #setOnMessageReceived,
-          [callback],
-        ),
-        returnValueForMissingStub: null,
-      );
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 }
