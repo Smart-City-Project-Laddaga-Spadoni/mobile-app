@@ -20,11 +20,19 @@ class _StartPageState extends State<StartPage> {
 
   Future<void> _checkServerUrl() async {
     String? serverUrl = await _storage.read(key: 'server_url');
+    String? token = await _storage.read(key: 'jwt');
     if (serverUrl != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
+      if (token != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      }
     }
   }
 

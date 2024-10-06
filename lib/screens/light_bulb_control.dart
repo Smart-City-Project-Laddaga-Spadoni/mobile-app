@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'start_page.dart';
+import 'login_screen.dart';
 import '../widgets/error_dialog.dart';
 import '../widgets/connection_status.dart';
 
@@ -32,8 +33,15 @@ class _LightBulbControlState extends State<LightBulbControl> {
   Future<void> _fetchDeviceStatus() async {
     String? serverUrl = await widget.storageService.read('server_url');
     final token = await widget.storageService.read('jwt');
+    if (token == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+      return;
+    }
     try {
-      final response = await widget.apiService.fetchDeviceStatus(serverUrl!, deviceId, token!);
+      final response = await widget.apiService.fetchDeviceStatus(serverUrl!, deviceId, token);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -72,6 +80,14 @@ class _LightBulbControlState extends State<LightBulbControl> {
     );
   }
 
+  Future<void> _logout() async {
+    await widget.storageService.logout();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => StartPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final connectionStatus = ConnectionStatus.of(context);
@@ -80,6 +96,10 @@ class _LightBulbControlState extends State<LightBulbControl> {
       appBar: AppBar(
         title: Text('Light Bulb Control'),
         actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _logout,
+          ),
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () async {

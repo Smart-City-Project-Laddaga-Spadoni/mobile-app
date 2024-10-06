@@ -14,4 +14,8 @@ class StorageService {
   Future<void> delete(String key) async {
     await _storage.delete(key: key);
   }
+
+  Future<void> logout() async {
+    await _storage.delete(key: 'jwt');
+  }
 }
