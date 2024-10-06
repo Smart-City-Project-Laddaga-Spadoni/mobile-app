@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../services/api_service.dart';
 import '../services/storage_service.dart';
 import 'start_page.dart';
@@ -27,14 +28,65 @@ class LightBulbControl extends StatefulWidget {
 
 class _LightBulbControlState extends State<LightBulbControl> {
   bool isLightOn = false;
-  int brightness = 50; // Aggiungi il campo brightness
+  int brightness = 50;
   late String deviceId;
+  late IO.Socket socket;
 
   @override
   void initState() {
     super.initState();
     deviceId = widget.deviceId;
     _fetchDeviceStatus();
+    _connectWebSocket();
+  }
+
+  void _connectWebSocket() async {
+    String? serverUrl = await widget.storageService.read('server_url');
+    if (serverUrl == null) {
+      _showErrorDialog('Server URL not found');
+      return;
+    }
+
+    try {
+      socket = IO.io(serverUrl, <String, dynamic>{
+        'transports': ['websocket'],
+        'autoConnect': false,
+      });
+
+      socket.connect();
+
+      socket.onConnect((_) {
+        print('connect');
+      });
+
+      socket.on('device_status_update', (data) {
+        // Usa direttamente i dati ricevuti senza decodificarli
+        final message = data;
+        if (message['device_id'] == deviceId) {
+          setState(() {
+            if (message['status'].containsKey('is_on')) {
+              isLightOn = message['status']['is_on'];
+            }
+            if (message['status'].containsKey('brightness')) {
+              brightness = message['status']['brightness'];
+            }
+          });
+        }
+      });
+
+      socket.onDisconnect((_) => print('disconnect'));
+
+      socket.onError((error) {
+        _showErrorDialog('WebSocket error: $error');
+      });
+
+      socket.on('connect_error', (error) {
+        _showErrorDialog('WebSocket connection error: $error');
+      });
+
+    } catch (e) {
+      _showErrorDialog('Failed to connect to WebSocket: $e');
+    }
   }
 
   Future<void> _fetchDeviceStatus() async {
@@ -53,7 +105,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
         final data = json.decode(response.body);
         setState(() {
           isLightOn = data['status']['is_on'];
-          brightness = data['status']['brightness'] ?? 50; // Imposta brightness a 50 se è nullo
+          brightness = data['status']['brightness'] ?? 50;
         });
       } else {
         _showErrorDialog('Failed to load device status: ${response.reasonPhrase}');
@@ -112,6 +164,15 @@ class _LightBulbControlState extends State<LightBulbControl> {
       deviceId = newDeviceId!;
     });
     _fetchDeviceStatus();
+  }
+
+  @override
+  void dispose() {
+    if (socket != null) {
+      socket.disconnect();
+      socket.close();
+    }
+    super.dispose();
   }
 
   @override
