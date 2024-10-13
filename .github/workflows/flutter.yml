@@ -65,10 +65,21 @@ jobs:
         TAG=${{ steps.get_tag.outputs.TAG }}
         VERSION=${TAG#v}
         IFS='.' read -ra ADDR <<< "$VERSION"
-        PATCH=${ADDR[2]}
-        PATCH=$((PATCH + 1))
-        NEW_TAG="v${ADDR[0]}.${ADDR[1]}.$PATCH"
+        
+        # Default to 1.0.0 if no tag is found
+        if [ -z "$VERSION" ]; then
+          NEW_TAG="v1.0.0"
+        else
+          MAJOR=${ADDR[0]:-1}
+          MINOR=${ADDR[1]:-0}
+          PATCH=${ADDR[2]:-0}
+
+          PATCH=$((PATCH + 1))
+          NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+        fi
+
         echo ::set-output name=NEW_TAG::$NEW_TAG
+
 
     - name: Create GitHub Release
       id: create_release
