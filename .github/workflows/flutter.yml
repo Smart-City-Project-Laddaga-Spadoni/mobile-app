@@ -58,12 +58,13 @@ jobs:
     - name: Get latest tag
       id: get_tag
       run: |
-        TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+        TAG=$(git tag | sort -V | tail -n 1)
         if [ -z "$TAG" ]; then
           echo "::set-output name=TAG::v0.0.0"
         else
           echo "::set-output name=TAG::$TAG"
         fi
+  
   
     - name: Increment version number
       id: increment_version
