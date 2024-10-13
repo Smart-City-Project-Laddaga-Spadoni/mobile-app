@@ -57,20 +57,26 @@ jobs:
 
     - name: Get latest tag
       id: get_tag
-      run: echo ::set-output name=TAG::$(git describe --tags --abbrev=0)
-
+      run: |
+        TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+        if [ -z "$TAG" ]; then
+          echo "::set-output name=TAG::v0.0.0"
+        else
+          echo "::set-output name=TAG::$TAG"
+        fi
+  
     - name: Increment version number
       id: increment_version
       run: |
         TAG=${{ steps.get_tag.outputs.TAG }}
         VERSION=${TAG#v}
         IFS='.' read -ra ADDR <<< "$VERSION"
-        
-        # Default to 1.0.0 if no tag is found
+
+        # Default to 0.0.0 if no valid tag is found
         if [ -z "$VERSION" ]; then
-          NEW_TAG="v1.0.0"
+          NEW_TAG="v0.0.1"
         else
-          MAJOR=${ADDR[0]:-1}
+          MAJOR=${ADDR[0]:-0}
           MINOR=${ADDR[1]:-0}
           PATCH=${ADDR[2]:-0}
 
@@ -78,9 +84,9 @@ jobs:
           NEW_TAG="v$MAJOR.$MINOR.$PATCH"
         fi
 
-        echo ::set-output name=NEW_TAG::$NEW_TAG
-
-
+        echo "::set-output name=NEW_TAG::$NEW_TAG"
+        echo "New tag created: $NEW_TAG"
+    
     - name: Create GitHub Release
       id: create_release
       uses: actions/create-release@v1
