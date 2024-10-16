@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/services/light_sensor_service.dart';
 import 'dart:convert';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../services/api_service.dart';
@@ -15,7 +16,8 @@ class LightBulbControl extends StatefulWidget {
   final String deviceId;
   final List<String> devices;
 
-  LightBulbControl({
+  const LightBulbControl({
+    super.key,
     required this.apiService,
     required this.storageService,
     required this.deviceId,
@@ -28,9 +30,12 @@ class LightBulbControl extends StatefulWidget {
 
 class _LightBulbControlState extends State<LightBulbControl> {
   bool isLightOn = false;
+  bool automaticBrightness = false;
   int brightness = 50;
   late String deviceId;
   late IO.Socket socket;
+  late final LightSensorService lightSensorService;
+  late final Stream<int> lightStream;
 
   @override
   void initState() {
@@ -38,6 +43,10 @@ class _LightBulbControlState extends State<LightBulbControl> {
     deviceId = widget.deviceId;
     _fetchDeviceStatus();
     _connectWebSocket();
+
+    lightSensorService = LightSensorService();
+    lightStream = lightSensorService.getLightSensorStream();
+    lightStream.listen(onLightSensorData);
   }
 
   void _connectWebSocket() async {
@@ -83,7 +92,6 @@ class _LightBulbControlState extends State<LightBulbControl> {
       socket.on('connect_error', (error) {
         _showErrorDialog('WebSocket connection error: $error');
       });
-
     } catch (e) {
       _showErrorDialog('Failed to connect to WebSocket: $e');
     }
@@ -100,7 +108,8 @@ class _LightBulbControlState extends State<LightBulbControl> {
       return;
     }
     try {
-      final response = await widget.apiService.fetchDeviceStatus(serverUrl!, deviceId, token);
+      final response = await widget.apiService
+          .fetchDeviceStatus(serverUrl!, deviceId, token);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -108,7 +117,8 @@ class _LightBulbControlState extends State<LightBulbControl> {
           brightness = data['status']['brightness'] ?? 50;
         });
       } else {
-        _showErrorDialog('Failed to load device status: ${response.reasonPhrase}');
+        _showErrorDialog(
+            'Failed to load device status: ${response.reasonPhrase}');
       }
     } catch (e) {
       _showErrorDialog('Connection error: $e');
@@ -119,9 +129,11 @@ class _LightBulbControlState extends State<LightBulbControl> {
     String? serverUrl = await widget.storageService.read('server_url');
     final token = await widget.storageService.read('jwt');
     try {
-      final response = await widget.apiService.updateDeviceStatus(serverUrl!, deviceId, isLightOn, brightness, token!);
+      final response = await widget.apiService.updateDeviceStatus(
+          serverUrl!, deviceId, isLightOn, brightness, token!);
       if (response.statusCode != 200) {
-        _showErrorDialog('Failed to update device status: ${response.reasonPhrase}');
+        _showErrorDialog(
+            'Failed to update device status: ${response.reasonPhrase}');
       }
     } catch (e) {
       _showErrorDialog('Connection error: $e');
@@ -170,6 +182,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
   void dispose() {
     socket.disconnect();
     socket.close();
+    lightSensorService.dispose();
     super.dispose();
   }
 
@@ -190,7 +203,9 @@ class _LightBulbControlState extends State<LightBulbControl> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingsPage(storageService: widget.storageService)),
+                MaterialPageRoute(
+                    builder: (context) =>
+                        SettingsPage(storageService: widget.storageService)),
               );
             },
           ),
@@ -201,8 +216,13 @@ class _LightBulbControlState extends State<LightBulbControl> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              connectionStatus?.isConnected ?? false ? 'Connected to server' : 'Not connected to server',
-              style: TextStyle(color: connectionStatus?.isConnected ?? false ? Colors.green : Colors.red),
+              connectionStatus?.isConnected ?? false
+                  ? 'Connected to server'
+                  : 'Not connected to server',
+              style: TextStyle(
+                  color: connectionStatus?.isConnected ?? false
+                      ? Colors.green
+                      : Colors.red),
             ),
             DropdownButton<String>(
               hint: Text('Select Device'),
@@ -216,7 +236,9 @@ class _LightBulbControlState extends State<LightBulbControl> {
               }).toList(),
             ),
             Image.asset(
-              isLightOn ? 'assets/images/light-bulb-ON.jpg' : 'assets/images/light-bulb-OFF.jpg',
+              isLightOn
+                  ? 'assets/images/light-bulb-ON.jpg'
+                  : 'assets/images/light-bulb-OFF.jpg',
               height: 200,
             ),
             SizedBox(height: 20),
@@ -226,19 +248,46 @@ class _LightBulbControlState extends State<LightBulbControl> {
             ),
             SizedBox(height: 20),
             if (isLightOn)
-              Slider(
-                value: brightness.toDouble(),
-                min: 1,
-                max: 100,
-                divisions: 99,
-                label: '$brightness',
-                onChanged: (double value) {
-                  _updateBrightness(value);
-                },
+              Column(
+                children: [
+                  Slider(
+                    value: brightness.toDouble(),
+                    min: 1,
+                    max: 100,
+                    divisions: 99,
+                    label: '$brightness',
+                    onChanged: (double value) {
+                      _updateBrightness(value);
+                    },
+                  ),
+                  Switch(
+                    value: automaticBrightness,
+                    activeColor: Colors.blueGrey,
+                    onChanged: (bool value) {
+                      setState(() {
+                        automaticBrightness = value;
+                      });
+                      if (value) {
+                        lightSensorService.startListening();
+                      } else {
+                        lightSensorService.stopListening();
+                      }
+                    },
+                  )
+                ],
               ),
           ],
         ),
       ),
     );
+  }
+
+  void onLightSensorData(int luxValue) {
+    if (automaticBrightness) {
+      setState(() {
+        brightness = luxValue;
+        print(luxValue);
+      });
+    }
   }
 }
