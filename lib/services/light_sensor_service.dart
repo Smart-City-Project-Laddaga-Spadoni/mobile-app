@@ -14,7 +14,8 @@ class LightSensorService {
   void startListening() {
     try {
       _subscription = _light.lightSensorStream.listen((luxValue) {
-        _lightStreamController.add(luxValue);
+        int normalizedLuxValue = _mapLuxToRange(luxValue);
+        _lightStreamController.add(normalizedLuxValue);
       });
     } on LightException catch (exception) {
       print(exception);
@@ -31,5 +32,13 @@ class LightSensorService {
 
   void dispose() {
     _lightStreamController.close();
+  }
+
+  int _mapLuxToRange(int luxValue) {
+    // TODO -> check if the received value's range
+    double maxLux = 40000.0; // massimo lux rilevabile
+    double minLux = 10.0; // minimo lux rilevabile
+    double scaledValue = ((luxValue - minLux) / (maxLux - minLux)) * 100;
+    return scaledValue.clamp(1, 100).toInt();
   }
 }
