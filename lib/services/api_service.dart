@@ -2,7 +2,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  Future<http.Response> login(String serverUrl, String username, String password) {
+  Future<http.Response> login(
+      String serverUrl, String username, String password) {
     return http.post(
       Uri.parse('$serverUrl/login'),
       headers: {'Content-Type': 'application/json'},
@@ -13,7 +14,8 @@ class ApiService {
     );
   }
 
-  Future<http.Response> signup(String serverUrl, String username, String password) {
+  Future<http.Response> signup(
+      String serverUrl, String username, String password) {
     return http.post(
       Uri.parse('$serverUrl/signup'),
       headers: {'Content-Type': 'application/json'},
@@ -24,21 +26,33 @@ class ApiService {
     );
   }
 
-  Future<http.Response> fetchDeviceStatus(String serverUrl, String deviceId, String token) {
+  Future<http.Response> fetchDeviceStatus(
+      String serverUrl, String deviceId, String token) {
     return http.get(
       Uri.parse('$serverUrl/device/$deviceId'),
       headers: {'Authorization': 'Bearer $token'},
     );
   }
 
-  Future<http.Response> updateDeviceStatus(String serverUrl, String deviceId, bool isLightOn, int brightness, String token) {
+  Future<http.Response> updateDeviceStatus(String serverUrl, String deviceId,
+      bool isLightOn, bool isBulbDimmable, int? brightness, String token) {
+    final status = <String, dynamic>{
+      'is_on': isLightOn,
+      'is_dimmable': isBulbDimmable,
+    };
+
+    // Conditionally add brightness if isDimmable is true and brightness is not null
+    if (isBulbDimmable && brightness != null) {
+      status['brightness'] = brightness;
+    }
+
     return http.post(
       Uri.parse('$serverUrl/device/$deviceId'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: json.encode({'status': {'is_on': isLightOn, 'brightness': brightness}}),
+      body: json.encode({'status': status}),
     );
   }
 

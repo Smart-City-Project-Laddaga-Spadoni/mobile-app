@@ -30,8 +30,9 @@ class LightBulbControl extends StatefulWidget {
 
 class _LightBulbControlState extends State<LightBulbControl> {
   bool isLightOn = false;
-  bool automaticBrightness = false;
+  bool isBulbDimmable = true;
   int brightness = 50;
+  bool automaticBrightness = false;
   late String deviceId;
   late IO.Socket socket;
   late final LightSensorService lightSensorService;
@@ -72,12 +73,18 @@ class _LightBulbControlState extends State<LightBulbControl> {
         // Usa direttamente i dati ricevuti senza decodificarli
         final message = data;
         if (message['device_id'] == deviceId) {
+          final status = message['status'];
+
           setState(() {
-            if (message['status'].containsKey('is_on')) {
-              isLightOn = message['status']['is_on'];
+            if (status.containsKey('is_on')) {
+              isLightOn = status['is_on'];
             }
-            if (message['status'].containsKey('brightness')) {
-              brightness = message['status']['brightness'];
+            if (status.containsKey('is_dimmable')) {
+              isBulbDimmable = status['is_dimmable'];
+
+              if (status.containsKey('brightness')) {
+                brightness = status['brightness'];
+              }
             }
           });
         }
@@ -112,9 +119,13 @@ class _LightBulbControlState extends State<LightBulbControl> {
           .fetchDeviceStatus(serverUrl!, deviceId, token);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        final status = data['status'];
         setState(() {
-          isLightOn = data['status']['is_on'];
-          brightness = data['status']['brightness'] ?? 50;
+          isLightOn = status['is_on'];
+          isBulbDimmable = status['is_dimmable'];
+          if (isBulbDimmable) {
+            brightness = status['brightness'];
+          }
         });
       } else {
         _showErrorDialog(
@@ -130,7 +141,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
     final token = await widget.storageService.read('jwt');
     try {
       final response = await widget.apiService.updateDeviceStatus(
-          serverUrl!, deviceId, isLightOn, brightness, token!);
+          serverUrl!, deviceId, isLightOn, isBulbDimmable, brightness, token!);
       if (response.statusCode != 200) {
         _showErrorDialog(
             'Failed to update device status: ${response.reasonPhrase}');
