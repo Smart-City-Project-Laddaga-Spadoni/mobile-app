@@ -47,7 +47,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
 
     lightSensorService = LightSensorService();
     lightStream = lightSensorService.getLightSensorStream();
-    lightStream.listen(onLightSensorData);
+    lightStream.listen(_onLightSensorData);
   }
 
   void _connectWebSocket() async {
@@ -189,6 +189,15 @@ class _LightBulbControlState extends State<LightBulbControl> {
     _fetchDeviceStatus();
   }
 
+  void _onLightSensorData(int luxValue) {
+    if (automaticBrightness) {
+      setState(() {
+        brightness = luxValue;
+        print(luxValue);
+      });
+    }
+  }
+
   @override
   void dispose() {
     socket.disconnect();
@@ -259,46 +268,40 @@ class _LightBulbControlState extends State<LightBulbControl> {
             ),
             SizedBox(height: 20),
             if (isLightOn)
-              Column(
-                children: [
-                  Slider(
-                    value: brightness.toDouble(),
-                    min: 1,
-                    max: 100,
-                    divisions: 99,
-                    label: '$brightness',
-                    onChanged: (double value) {
-                      _updateBrightness(value);
-                    },
-                  ),
-                  Switch(
-                    value: automaticBrightness,
-                    activeColor: Colors.blueGrey,
-                    onChanged: (bool value) {
-                      setState(() {
-                        automaticBrightness = value;
-                      });
-                      if (value) {
-                        lightSensorService.startListening();
-                      } else {
-                        lightSensorService.stopListening();
-                      }
-                    },
-                  )
-                ],
+              Slider(
+                value: brightness.toDouble(),
+                min: 1,
+                max: 100,
+                divisions: 99,
+                label: '$brightness',
+                onChanged: automaticBrightness
+                    ? null
+                    : (double value) {
+                        _updateBrightness(value);
+                      },
               ),
+            Row(
+              children: [
+                Text("Automatic brightness "),
+                Switch(
+                  value: automaticBrightness,
+                  activeColor: Colors.blueGrey,
+                  onChanged: (bool value) {
+                    setState(() {
+                      automaticBrightness = value;
+                    });
+                    if (value) {
+                      lightSensorService.startListening();
+                    } else {
+                      lightSensorService.stopListening();
+                    }
+                  },
+                ),
+              ],
+            )
           ],
         ),
       ),
     );
-  }
-
-  void onLightSensorData(int luxValue) {
-    if (automaticBrightness) {
-      setState(() {
-        brightness = luxValue;
-        print(luxValue);
-      });
-    }
   }
 }
