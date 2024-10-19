@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:mobile_app/services/light_sensor_service.dart';
 import 'dart:convert';
@@ -36,7 +37,6 @@ class _LightBulbControlState extends State<LightBulbControl> {
   late String deviceId;
   late IO.Socket socket;
   late final LightSensorService lightSensorService;
-  late final Stream<int> lightStream;
 
   @override
   void initState() {
@@ -46,8 +46,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
     _connectWebSocket();
 
     lightSensorService = LightSensorService();
-    lightStream = lightSensorService.getLightSensorStream();
-    lightStream.listen(_onLightSensorData);
+    lightSensorService.initialize();
   }
 
   void _connectWebSocket() async {
@@ -141,7 +140,12 @@ class _LightBulbControlState extends State<LightBulbControl> {
     final token = await widget.storageService.read('jwt');
     try {
       final response = await widget.apiService.updateDeviceStatus(
-          serverUrl!, deviceId, isLightOn, isBulbDimmable, brightness, token!);
+          serverUrl!,
+          deviceId,
+          isLightOn,
+          isBulbDimmable,
+          isBulbDimmable ? brightness : null,
+          token!);
       if (response.statusCode != 200) {
         _showErrorDialog(
             'Failed to update device status: ${response.reasonPhrase}');
@@ -187,15 +191,6 @@ class _LightBulbControlState extends State<LightBulbControl> {
       deviceId = newDeviceId!;
     });
     _fetchDeviceStatus();
-  }
-
-  void _onLightSensorData(int luxValue) {
-    if (automaticBrightness) {
-      setState(() {
-        brightness = luxValue;
-        print(luxValue);
-      });
-    }
   }
 
   @override
@@ -268,36 +263,70 @@ class _LightBulbControlState extends State<LightBulbControl> {
             ),
             SizedBox(height: 20),
             if (isLightOn)
-              Slider(
-                value: brightness.toDouble(),
-                min: 1,
-                max: 100,
-                divisions: 99,
-                label: '$brightness',
-                onChanged: automaticBrightness
-                    ? null
-                    : (double value) {
-                        _updateBrightness(value);
+              Row(
+                children: [
+                  Expanded(
+                    child: StreamBuilder<int>(
+                      stream: lightSensorService.lightStream,
+                      builder: (context, snapshot) {
+                        // Check if the stream has valid data
+                        double lightValue =
+                            snapshot.hasData ? snapshot.data!.toDouble() : 10.0;
+
+                        // Automatically update brightness if automaticBrightness is true
+                        if (automaticBrightness && snapshot.hasData) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _updateBrightness(lightValue);
+                          });
+                        }
+
+                        return Slider(
+                          value: automaticBrightness
+                              ? lightValue
+                              : brightness.toDouble(),
+                          min: 1,
+                          max: 100,
+                          divisions: 99,
+                          label: '$brightness',
+                          onChanged: automaticBrightness
+                              ? null
+                              : (double value) {
+                                  _updateBrightness(value);
+                                },
+                        );
                       },
+                    ),
+                  ),
+                ],
               ),
-            Row(
-              children: [
-                Text("Automatic brightness "),
-                Switch(
-                  value: automaticBrightness,
-                  activeColor: Colors.blueGrey,
-                  onChanged: (bool value) {
-                    setState(() {
-                      automaticBrightness = value;
-                    });
-                    if (value) {
-                      lightSensorService.startListening();
-                    } else {
-                      lightSensorService.stopListening();
-                    }
-                  },
-                ),
-              ],
+            Center(
+              child: Row(
+                children: [
+                  StreamBuilder<int>(
+                    stream: lightSensorService.lightStream,
+                    builder: (context, snapshot) {
+                      return Text(
+                        'Light Level: ${snapshot.data ?? 'No data'}',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      );
+                    },
+                  ),
+                  Switch(
+                    value: automaticBrightness,
+                    activeColor: Colors.blueAccent,
+                    onChanged: (bool value) async {
+                      setState(() {
+                        automaticBrightness = value;
+                      });
+                      if (value) {
+                        await lightSensorService.startListening();
+                      } else {
+                        await lightSensorService.stopListening();
+                      }
+                    },
+                  ),
+                ],
+              ),
             )
           ],
         ),
