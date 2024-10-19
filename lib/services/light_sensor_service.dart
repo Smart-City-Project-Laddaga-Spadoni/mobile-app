@@ -31,19 +31,6 @@ class LightSensorService {
     _light = null;
   }
 
-  // Process incoming light values
-  int _processValue(int value) {
-    _recentValues.add(value);
-    if (_recentValues.length > _movingAverageWindow) {
-      _recentValues.removeAt(0);
-    }
-
-    // Calculate moving average
-    final average =
-        _recentValues.reduce((a, b) => a + b) / _recentValues.length;
-    return average.round();
-  }
-
   // Start listening to light sensor
   Future<bool> startListening() async {
     if (_isListening) return true; // Already listening
