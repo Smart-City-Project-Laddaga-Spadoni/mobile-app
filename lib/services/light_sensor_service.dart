@@ -4,40 +4,97 @@ import 'package:light/light.dart';
 import 'package:rxdart/rxdart.dart';
 
 class LightSensorService {
-  late final Light _light;
-  late final StreamSubscription _subscription;
-  late final StreamController<int> _lightStreamController;
-  List<int> _recentValues = [];
-  static const int _movingAverageWindow = 5;
+  Light? _light;
+  StreamSubscription? _subscription;
+  StreamController<int>? _lightStreamController;
+  final List<int> _recentValues = [];
+  final int _movingAverageWindow = 5;
+  bool _isListening = false;
 
-  LightSensorService() {
+  // Getter for the stream
+  Stream<int> get lightStream =>
+      _lightStreamController?.stream ?? Stream.empty();
+
+  // Initialize the service
+  Future<void> initialize() async {
+    if (_light != null) return; // Already initialized
+
     _light = Light();
     _lightStreamController = StreamController<int>.broadcast();
   }
 
-  void startListening() {
+  // Dispose of resources
+  Future<void> dispose() async {
+    await stopListening();
+    await _lightStreamController?.close();
+    _lightStreamController = null;
+    _light = null;
+  }
+
+  // Process incoming light values
+  int _processValue(int value) {
+    _recentValues.add(value);
+    if (_recentValues.length > _movingAverageWindow) {
+      _recentValues.removeAt(0);
+    }
+
+    // Calculate moving average
+    final average =
+        _recentValues.reduce((a, b) => a + b) / _recentValues.length;
+    return average.round();
+  }
+
+  // Start listening to light sensor
+  Future<bool> startListening() async {
+    if (_isListening) return true; // Already listening
+    if (_light == null) await initialize();
+
     try {
-      _subscription = _light.lightSensorStream
-          .throttleTime(const Duration(seconds: 3))
-          .map((luxValue) => _mapLuxToRange(luxValue))
-          .map(_smoothValue) // First smooth the raw values
-          .map(_applyHysteresis) // Then apply hysteresis to the smooth values
-          .map(_invertForBulbControl) // Then invert for bulb control
-          .map(
-              _applyTimeBasedAdjustment) // Finally apply time-based adjustments
-          .map(_applyDeadZone) // And enforce dead zones
-          .listen((processedValue) {
-        _lightStreamController.add(processedValue);
+      _subscription = _light?.lightSensorStream
+          .throttleTime(const Duration(milliseconds: 250))
+          .map(_mapLuxToRange)
+          .listen((value) {
+        _lightStreamController?.add(value);
       });
+
+      _isListening = true;
+      return true;
     } on LightException catch (exception) {
-      print(exception);
+      print('Light sensor error: $exception');
+      _isListening = false;
+      return false;
     }
   }
 
-  int _mapLuxToRange(int luxValue) {
-    double maxLux = 40000.0;
-    double minLux = 10.0;
-    double scaledValue = ((luxValue - minLux) / (maxLux - minLux)) * 100;
+  // Stop listening to light sensor
+  Future<void> stopListening() async {
+    await _subscription?.cancel();
+    _subscription = null;
+    _isListening = false;
+    _recentValues.clear();
+  }
+
+  // Check if the service is currently listening
+  bool get isListening => _isListening;
+
+  int _mapLuxToRange(int luxValue, {double sensitivity = 1.0}) {
+    // Prevent log(0)
+    double lux = max(luxValue.toDouble(), 1.0);
+
+    // Constants for mapping
+    double maxLux = 45000.0;
+    double minLux = 1.0;
+
+    // Use log scale with sensitivity adjustment
+    double logValue = log(lux) / log(10);
+    double logMin = log(minLux) / log(10);
+    double logMax = log(maxLux) / log(10);
+
+    // Map to 1-100 range with sensitivity adjustment
+    double scaledValue = ((logValue - logMin) / (logMax - logMin)) * 100;
+    scaledValue = pow(scaledValue / 100, sensitivity) * 100;
+
+    // Ensure output is between 1 and 100
     return scaledValue.clamp(1, 100).toInt();
   }
 
@@ -90,17 +147,5 @@ class LightSensorService {
     }
 
     return value;
-  }
-
-  Stream<int> getLightSensorStream() {
-    return _lightStreamController.stream;
-  }
-
-  void stopListening() {
-    _subscription.cancel();
-  }
-
-  void dispose() {
-    _lightStreamController.close();
   }
 }
