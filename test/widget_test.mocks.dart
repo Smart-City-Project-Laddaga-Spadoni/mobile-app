@@ -130,6 +130,7 @@ class MockApiService extends _i1.Mock implements _i3.ApiService {
     String? serverUrl,
     String? deviceId,
     bool? isLightOn,
+    bool isBulbDimmable,
     int? brightness,
     String? token,
   ) =>
@@ -140,6 +141,7 @@ class MockApiService extends _i1.Mock implements _i3.ApiService {
             serverUrl,
             deviceId,
             isLightOn,
+            isBulbDimmable,
             brightness,
             token,
           ],
@@ -152,6 +154,7 @@ class MockApiService extends _i1.Mock implements _i3.ApiService {
               serverUrl,
               deviceId,
               isLightOn,
+              isBulbDimmable,
               brightness,
               token,
             ],
