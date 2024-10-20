@@ -1,3 +1,4 @@
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:mobile_app/services/light_sensor_service.dart';
@@ -37,6 +38,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
   late String deviceId;
   late IO.Socket socket;
   late final LightSensorService lightSensorService;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -163,10 +165,16 @@ class _LightBulbControlState extends State<LightBulbControl> {
   }
 
   Future<void> _updateBrightness(double newBrightness) async {
-    setState(() {
-      brightness = newBrightness.toInt();
+    // Cancels the previous debouncer if there was a new state change
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    // Starts a new debouncer
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      setState(() {
+        brightness = newBrightness.toInt();
+      });
+      await _updateDeviceStatus();
     });
-    await _updateDeviceStatus();
   }
 
   void _showErrorDialog(String message) {
@@ -280,19 +288,32 @@ class _LightBulbControlState extends State<LightBulbControl> {
                           });
                         }
 
-                        return Slider(
-                          value: automaticBrightness
-                              ? lightValue
-                              : brightness.toDouble(),
-                          min: 1,
-                          max: 100,
-                          divisions: 99,
-                          label: '$brightness',
-                          onChanged: automaticBrightness
-                              ? null
-                              : (double value) {
-                                  _updateBrightness(value);
-                                },
+                        return TweenAnimationBuilder<double>(
+                          tween: Tween<double>(
+                            begin: automaticBrightness
+                                ? lightValue
+                                : brightness.toDouble(),
+                            end: automaticBrightness
+                                ? lightValue
+                                : brightness.toDouble(),
+                          ),
+                          duration: const Duration(milliseconds: 300),
+                          builder: (context, animatedValue, child) {
+                            return Slider(
+                              value: automaticBrightness
+                                  ? animatedValue
+                                  : brightness.toDouble(),
+                              min: 1,
+                              max: 100,
+                              divisions: 99,
+                              label: '$brightness',
+                              onChanged: automaticBrightness
+                                  ? null
+                                  : (double value) {
+                                      _updateBrightness(value);
+                                    },
+                            );
+                          },
                         );
                       },
                     ),

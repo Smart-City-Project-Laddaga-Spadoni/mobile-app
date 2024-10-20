@@ -38,8 +38,9 @@ class LightSensorService {
 
     try {
       _subscription = _light?.lightSensorStream
-          .throttleTime(const Duration(milliseconds: 250))
+          .throttleTime(const Duration(milliseconds: 500))
           .map(_mapLuxToRange)
+          .map(_invertForBulbControl)
           .listen((value) {
         _lightStreamController?.add(value);
       });
@@ -65,36 +66,36 @@ class LightSensorService {
   bool get isListening => _isListening;
 
   int _mapLuxToRange(int luxValue, {double sensitivity = 1.0}) {
-    // Prevent log(0)
-    double lux = max(luxValue.toDouble(), 1.0);
+    // Limit sensor value
+    double lux = luxValue.toDouble().clamp(10.0, 40000.0);
 
     // Constants for mapping
-    double maxLux = 45000.0;
-    double minLux = 1.0;
+    double maxLux = 40000.0;
+    double minLux = 5.0;
 
-    // Use log scale with sensitivity adjustment
+    // Use log scale with sensitivity adjustment, with safety for low light values
     double logValue = log(lux) / log(10);
     double logMin = log(minLux) / log(10);
     double logMax = log(maxLux) / log(10);
 
     // Map to 1-100 range with sensitivity adjustment
     double scaledValue = ((logValue - logMin) / (logMax - logMin)) * 100;
-    scaledValue = pow(scaledValue / 100, sensitivity) * 100;
+    // Elimina il ridimensionamento basato sulla sensibilità per garantire il massimo valore
+    scaledValue = scaledValue.clamp(1, 100);
 
     // Ensure output is between 1 and 100
+    // To make the response smoother for low light values, add a slight shift at the lower end
     return scaledValue.clamp(1, 100).toInt();
   }
 
-  // Hysteresis to prevent rapid changes when values are borderline
-  int _applyHysteresis(int value) {
-    int lastValue = 0;
-    const int threshold = 5; // Minimum change required
+// Invert the value for bulb control (bright ambient = dim bulb)
+  // Funzione di inversione aggiornata per garantire che il valore raggiunga 100
+  int _invertForBulbControl(int value) {
+    // Inversione diretta senza radice quadrata
+    double invertedValue = 100.0 - value;
 
-    if ((value - lastValue).abs() < threshold) {
-      return lastValue;
-    }
-    lastValue = value;
-    return value;
+    // Assicurati che il valore sia compreso tra 1 e 100
+    return invertedValue.clamp(1, 100).round();
   }
 
   // Moving average to smooth out sudden spikes
@@ -106,15 +107,6 @@ class LightSensorService {
 
     return (_recentValues.reduce((a, b) => a + b) / _recentValues.length)
         .round();
-  }
-
-  // Invert the value for bulb control (bright ambient = dim bulb)
-  int _invertForBulbControl(int value) {
-    // Apply a non-linear curve for better human perception
-    // Using inverse square root for a more natural feeling response
-    double normalizedValue = value / 100;
-    double invertedValue = (1 - sqrt(normalizedValue)) * 100;
-    return invertedValue.round();
   }
 
   // Optional: Add dead zone at very high/low values
