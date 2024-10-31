@@ -48,6 +48,7 @@ class _DeviceSelectionScreenState extends State<DeviceSelectionScreen> {
         final data = json.decode(response.body);
         setState(() {
           devices = List<String>.from(data.map((device) => device['device_id']));
+          devices.sort((a, b) => a.compareTo(b));
         });
       } else {
         _showErrorDialog('Failed to load devices: ${response.reasonPhrase}');
