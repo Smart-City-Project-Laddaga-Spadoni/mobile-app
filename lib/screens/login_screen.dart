@@ -8,6 +8,8 @@ import '../widgets/error_dialog.dart';
 import '../widgets/connection_status.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }

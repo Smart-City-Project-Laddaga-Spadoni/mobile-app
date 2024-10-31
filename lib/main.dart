@@ -12,6 +12,8 @@ class MyApp extends StatelessWidget {
   final ApiService apiService = ApiService();
   final StorageService storageService = StorageService();
 
+  MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ConnectionStatus(

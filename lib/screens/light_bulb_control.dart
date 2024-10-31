@@ -168,11 +168,13 @@ class _LightBulbControlState extends State<LightBulbControl> {
     // Cancels the previous debouncer if there was a new state change
     if (_debounce?.isActive ?? false) _debounce!.cancel();
 
+    setState(() {
+      brightness = newBrightness.toInt();
+    });
+
     // Starts a new debouncer
-    _debounce = Timer(const Duration(milliseconds: 500), () async {
-      setState(() {
-        brightness = newBrightness.toInt();
-      });
+    _debounce = Timer(const Duration(milliseconds: 400), () async {
+      print("inviato");
       await _updateDeviceStatus();
     });
   }
@@ -267,11 +269,14 @@ class _LightBulbControlState extends State<LightBulbControl> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _toggleLight,
-              child: Text(isLightOn ? 'Turn OFF' : 'Turn ON'),
+              child: Text(isLightOn ? 'Turn OFF' : 'Turn ON',
+                  style: TextStyle(fontSize: 16)),
             ),
             SizedBox(height: 20),
             if (isLightOn)
               Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: StreamBuilder<int>(
@@ -279,9 +284,8 @@ class _LightBulbControlState extends State<LightBulbControl> {
                       builder: (context, snapshot) {
                         // Check if the stream has valid data
                         double lightValue =
-                            snapshot.hasData ? snapshot.data!.toDouble() : 10.0;
+                            snapshot.hasData ? snapshot.data!.toDouble() : 10;
 
-                        // Automatically update brightness if automaticBrightness is true
                         if (automaticBrightness && snapshot.hasData) {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             _updateBrightness(lightValue);
@@ -297,7 +301,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
                                 ? lightValue
                                 : brightness.toDouble(),
                           ),
-                          duration: const Duration(milliseconds: 300),
+                          duration: const Duration(milliseconds: 800),
                           builder: (context, animatedValue, child) {
                             return Slider(
                               value: automaticBrightness
@@ -318,23 +322,25 @@ class _LightBulbControlState extends State<LightBulbControl> {
                       },
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 15.0),
+                    child: Text(
+                      "$brightness",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
               ),
             Center(
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  StreamBuilder<int>(
-                    stream: lightSensorService.lightStream,
-                    builder: (context, snapshot) {
-                      return Text(
-                        'Light Level: ${snapshot.data ?? 'No data'}',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      );
-                    },
-                  ),
+                  Text("Automatic brightness", style: TextStyle(fontSize: 14)),
+                  SizedBox(width: 6),
                   Switch(
                     value: automaticBrightness,
-                    activeColor: Colors.blueAccent,
+                    activeColor: Colors.blue,
                     onChanged: (bool value) async {
                       setState(() {
                         automaticBrightness = value;
@@ -348,7 +354,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

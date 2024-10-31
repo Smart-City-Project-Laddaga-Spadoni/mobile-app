@@ -8,7 +8,7 @@ class ConnectionStatus extends StatefulWidget {
   final ApiService apiService;
   final StorageService storageService;
 
-  ConnectionStatus({
+  const ConnectionStatus({super.key, 
     required this.child,
     required this.apiService,
     required this.storageService,
@@ -82,10 +82,10 @@ class _ConnectionStatusState extends State<ConnectionStatus> {
 class ConnectionStatusInherited extends InheritedWidget {
   final bool isConnected;
 
-  ConnectionStatusInherited({
-    required Widget child,
+  const ConnectionStatusInherited({super.key, 
+    required super.child,
     required this.isConnected,
-  }) : super(child: child);
+  });
 
   @override
   bool updateShouldNotify(ConnectionStatusInherited oldWidget) {

@@ -4,11 +4,14 @@ import 'login_screen.dart';
 import '../widgets/connection_status.dart';
 
 class StartPage extends StatefulWidget {
+  const StartPage({super.key});
+
   @override
   _StartPageState createState() => _StartPageState();
 }
 
 class _StartPageState extends State<StartPage> {
+  final String awsServer = "http://2-env.eba-sunmfvmc.eu-north-1.elasticbeanstalk.com";
   final TextEditingController _serverController = TextEditingController();
   final FlutterSecureStorage _storage = FlutterSecureStorage();
 
@@ -49,6 +52,22 @@ class _StartPageState extends State<StartPage> {
     }
     await _storage.write(key: 'server_url', value: serverUrl);
     // Controlla immediatamente la connessione
+    final connectionStatus = ConnectionStatus.of(context);
+    await connectionStatus?.checkServerConnection();
+    connectionStatus?.startPingTimer();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
+  }
+
+  Future<void> _defaultServerUrl() async {
+    final serverUrl = awsServer;
+    if (!_isValidUrl(serverUrl)) {
+      _showErrorDialog('Please enter a valid server URL.');
+      return;
+    }
+    await _storage.write(key: 'server_url', value: serverUrl);
     final connectionStatus = ConnectionStatus.of(context);
     await connectionStatus?.checkServerConnection();
     connectionStatus?.startPingTimer();
@@ -102,6 +121,11 @@ class _StartPageState extends State<StartPage> {
             ElevatedButton(
               onPressed: _saveServerUrl,
               child: Text('Save'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _defaultServerUrl,
+              child: Text('AWS server'),
             ),
           ],
         ),

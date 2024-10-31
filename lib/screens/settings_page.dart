@@ -5,7 +5,7 @@ import 'start_page.dart';
 class SettingsPage extends StatelessWidget {
   final StorageService storageService;
 
-  SettingsPage({required this.storageService});
+  const SettingsPage({super.key, required this.storageService});
 
   Future<void> _resetSettings(BuildContext context) async {
     await storageService.delete('server_url');

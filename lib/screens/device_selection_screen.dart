@@ -13,7 +13,7 @@ class DeviceSelectionScreen extends StatefulWidget {
   final ApiService apiService;
   final StorageService storageService;
 
-  DeviceSelectionScreen({
+  const DeviceSelectionScreen({super.key, 
     required this.apiService,
     required this.storageService,
   });

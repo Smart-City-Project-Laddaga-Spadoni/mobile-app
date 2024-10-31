@@ -43,6 +43,7 @@ dependencies:
   rxdart: ^0.28.0
 
 dev_dependencies:
+  flutter_launcher_icons: ^0.14.1
   flutter_test:
     sdk: flutter
 
@@ -56,6 +57,14 @@ dev_dependencies:
   husky: ^0.1.7
   mockito: ^5.4.4
   build_runner: ^2.1.11
+
+flutter_icons:
+  android: true
+  image_path: "assets/icons/app_icon.png" # Per iOS e fallback Android
+  adaptive_icon_background: "#FFFFFF"     # Colore di sfondo (oppure usa un'immagine)
+  adaptive_icon_foreground: "assets/icons/app_icon.png" # Usa la tua icona qui
+
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
