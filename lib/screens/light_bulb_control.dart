@@ -173,7 +173,7 @@ class _LightBulbControlState extends State<LightBulbControl> {
     });
 
     // Starts a new debouncer
-    _debounce = Timer(const Duration(milliseconds: 400), () async {
+    _debounce = Timer(const Duration(milliseconds: 200), () async {
       print("inviato");
       await _updateDeviceStatus();
     });
